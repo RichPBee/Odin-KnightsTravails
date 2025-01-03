@@ -96,8 +96,10 @@ class Square
 
 const knightMoves = (startPos: Position, endPos: Position) => {
     const start = new Square(startPos);
-    start.generateMoves();
     const queue = [start];
+
+    start.generateMoves();
+    
     let answer: Square;
     let found = false;
     while (!found)
@@ -105,7 +107,7 @@ const knightMoves = (startPos: Position, endPos: Position) => {
         const move = queue[0];
         move.generateMoves();
         move.moves.forEach((move) => { 
-            if (move.pos[0] == endPos[0] && move.pos[1] == endPos[1])
+            if (isEndPos(move.pos, endPos))
             {
                 found = true;
                 answer = new Square(move.pos, queue[0]);
@@ -122,6 +124,10 @@ const knightMoves = (startPos: Position, endPos: Position) => {
     const final = resolveAnswer(answer)
 
     return final.reverse();
+}
+
+const isEndPos = (pos: Position, target: Position) => { 
+    return pos[0] == target[0] && pos[1] == target[1]
 }
 
 /**Recursive function used to work back through the sequence from the final point. */
