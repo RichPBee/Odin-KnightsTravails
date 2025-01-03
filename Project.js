@@ -1,3 +1,6 @@
+/**
+ *Squares are representative of vertices in a node, and each contain information about which other nodes they can reach
+ */
 class Square {
     get moves() { return this._moves; }
     ;
@@ -7,19 +10,21 @@ class Square {
     ;
     get pos() { return this._start; }
     ;
-    constructor(start) {
+    get PreviousSquare() { return this._previousSquare; }
+    ;
+    constructor(start, previousSquare = null) {
         this._start = start;
-        this._moves = this.generateMoves();
+        this._previousSquare = previousSquare;
     }
     generateMoves() {
         const moves = [];
         for (let i = 0; i < 8; i++) {
             const move = this.createMove(i, this._start);
             if (this.isValid(move)) {
-                moves.push(move);
+                moves.push(new Square(move, this));
             }
         }
-        return moves;
+        this._moves = moves;
     }
     createMove(index, start) {
         let move;
@@ -82,11 +87,34 @@ class Square {
 // }
 const knightMoves = (startPos, endPos) => {
     const start = new Square(startPos);
-    const queue = [start.pos];
-    while (queue[0][0] != endPos[0] && queue[0][1] != endPos[1]) {
-        const move = start.moves[0];
-        return [start.pos].concat(knightMoves(move, endPos));
+    start.generateMoves();
+    const queue = [start];
+    let answer;
+    let found = false;
+    while (!found) {
+        const move = queue[0];
+        move.generateMoves();
+        move.moves.forEach((move) => {
+            if (move.pos[0] == endPos[0] && move.pos[1] == endPos[1]) {
+                found = true;
+                answer = new Square(move.pos, queue[0]);
+                return;
+            }
+            else {
+                queue.push(move);
+            }
+        });
+        queue.shift();
     }
+    const final = resolveAnswer(answer);
+    return final.reverse();
 };
-console.log(knightMoves([0, 0], [2, 1]));
+/**Recursive function used to work back through the sequence from the final point. */
+const resolveAnswer = (answer) => {
+    if (!answer.PreviousSquare) {
+        return [answer.pos];
+    }
+    return [answer.pos].concat(resolveAnswer(answer.PreviousSquare));
+};
+console.log(knightMoves([0, 0], [7, 7]));
 //# sourceMappingURL=Project.js.map

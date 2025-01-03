@@ -1,36 +1,41 @@
 type Position = [number, number];
 
+/**
+ *Squares are representative of vertices in a node, and each contain information about which other nodes they can reach
+ */
 class Square
 {
-    protected _start: number[];
-    protected _moves: number[][];
+    protected _start: Position;
+    protected _moves: Square[];
+    protected _previousSquare: Square | null;
     public get moves() { return this._moves };
     public get x() { return this._start[0] };
     public get y() { return this._start[ 1 ] };
     public get pos() { return this._start };
-    constructor(start: number[])
+    public get PreviousSquare() {return this._previousSquare};
+    constructor(start: Position, previousSquare: Square | null = null)
     {
         this._start = start;
-        this._moves = this.generateMoves();
+        this._previousSquare = previousSquare;
     }
 
-    protected generateMoves(): number[][]
+    public generateMoves()
     {
-        const moves: number[][] = [];
+        const moves: Square[] = [];
         for (let i = 0; i < 8; i++)
         {
             const move = this.createMove(i, this._start);
             if (this.isValid(move))
             {
-                moves.push(move);
+                moves.push(new Square(move, this));
             }
         }
-        return moves;
+        this._moves = moves;
     }
 
-    protected createMove(index: number, start: number[]): number[]
+    protected createMove(index: number, start: Position): Position
     {
-        let move: number[];
+        let move: Position;
         switch (index)
         {
             case 0:
@@ -88,15 +93,46 @@ class Square
 //     }
 // }
 
-const knightMoves = (startPos: number[], endPos: number[]) => {
+
+const knightMoves = (startPos: Position, endPos: Position) => {
     const start = new Square(startPos);
-    const queue = [start.pos];
-    while (queue[0][0] != endPos[0] && queue[0][1] != endPos[1])
+    start.generateMoves();
+    const queue = [start];
+    let answer: Square;
+    let found = false;
+    while (!found)
     {
-        const move = start.moves[0];
-        return [start.pos].concat(knightMoves(move, endPos));
+        const move = queue[0];
+        move.generateMoves();
+        move.moves.forEach((move) => { 
+            if (move.pos[0] == endPos[0] && move.pos[1] == endPos[1])
+            {
+                found = true;
+                answer = new Square(move.pos, queue[0]);
+                return;
+            }
+            else
+            {
+                queue.push(move);
+            }
+        })
+        queue.shift();
     }
+
+    const final = resolveAnswer(answer)
+
+    return final.reverse();
 }
 
-console.log(knightMoves([0,0], [2,1]));
+/**Recursive function used to work back through the sequence from the final point. */
+const resolveAnswer = (answer: Square): Position[] =>
+{
+    if (!answer.PreviousSquare)
+    {
+        return [answer.pos];
+    }
+    return [answer.pos].concat(resolveAnswer(answer.PreviousSquare));
+}
+
+console.log(knightMoves([0,0],[7,7]));
 
